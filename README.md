@@ -97,3 +97,73 @@ the database is queried using the users email address to retrieve the users obje
 sendVerificationEmail
 calls the getVerificationToken method, returning an instance of the Token model which is then saved in the database. A link is created and the from, to, subject and html for the email is set and passed to the sendEmail util function.
 ```# emailver-belakang
+
+
+password.js
+The password controller includes the following functions.
+recover
+the database is queried using the user's email address to retrieve the user's object, if found, the generatePasswordReset method is called to generate a password reset token and set its expiry time (1 hour) which is then added to the users object and saved.
+A reset link is created and the from, to, subject and html for the email is set and passed to the sendEmail util function.
+--
+reset
+queries the database for the users object using the password reset token and verifying it's still valid by adding resetPasswordExpires: {$gt: Date.now()}.
+If user is found, the password reset page is displayed.
+---
+resetPassword
+queries the database using the password reset token and veryfying it is still valid by adding resetPasswordExpires: {$gt: Date.now()}.
+if the token is still valid, the users password is updated, the resetPasswordToken and resetPasswordExpires fields are set to undefined and the user object is saved and an email is sent to the user confirming the change.
+
+
+user.js
+update
+the user id is extracted from the request params variable, there's a check to make sure the data being updated belongs to the user.
+An update object is created using the request body and Mongoose findByIdAndUpdate is used to query and update the user’s data.
+The req.file variable is checked to determine if an image was uploaded, if yes, the req variable is passed to the uploader util function.
+If upload is succesful, the url is added to the users object and saved.
+
+
+##Routes
+
+index.js
+The /api/auth uses the auth routes.
+The /api/user uses the user routes. 
+A middleware is attached to the user endpoint, the middleware checks and authenticates the jwt token passed before accessing the user routes.
+--
+auth.js
+This validate middleware is used to check and validate all inputs during registration and login.
+--
+user.js
+In this file, the multer package is used to create the middleware upload which accept a single file with the field name profileImage. 
+This middleware is attached to the update endpoint to allow for multipart/form-data.
+
+const multer = require('multer');
+const upload = multer().single('profileImage');
+
+router.put('/:id', upload, User.update);
+
+
+
+User Index
+Try accessing the user index. /api/user
+
+![alt text](/home/thomas/Documents/verivikasi-email/1_ZG3n-ExvaKK-xwx0J6ADMg.gif)
+
+
+Register and Login
+Create a POST request to /api/auth/register .
+Create a POST request to /api/auth/login .
+
+![alt text](/home/thomas/Documents/verivikasi-email/1_H-xi4s-d5tH7cNXUYJYBCQ.gif)
+
+
+Update User Info and Upload Profile Image
+
+Try updating the user information and uploading a profile image using endpoint/api/user/[your_user_id] passing the token.
+
+Login and Recover Password
+Login with your current password.
+Create a POST request to /api/auth/recover .
+
+![alt text](/home/thomas/Documents/verivikasi-email/1_ncy1x2t3LELCwlS1rZZM4A.gif)
+
+
